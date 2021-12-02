@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 namespace Task16
 {
@@ -18,6 +23,17 @@ namespace Task16
     {
         static void Main(string[] args)
         {
+            string path = "Logs";
+            if (!Directory.Exists(path)) 
+            {
+                Directory.CreateDirectory(path);
+            }
+            string path2 = "Logs/Products.json";
+            if (!File.Exists(path2))
+            {
+                var newFile = File.Create(path2);
+                newFile.Close();
+            }
             Console.Write("Введите количество видов товара:   ");
             int a = Convert.ToInt32(Console.ReadLine());
             Product[] products = new Product[a];
@@ -31,12 +47,20 @@ namespace Task16
                 product1.NameProduct = Convert.ToString(Console.ReadLine());
                 Console.Write("Введите стоимость товара:\t ");
                 product1.PriceProduct = Convert.ToDouble(Console.ReadLine());
-                products[j] = product1;
+                products[j] = product1;                               
             }
             foreach (var p in products)
             {
                 product1.Print();
             }
+            JsonSerializerOptions options = new JsonSerializerOptions()
+            {
+                Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic), // на сайте microsoft.com
+                WriteIndented = false
+            };
+            string jsonString = JsonSerializer.Serialize(product1, options);
+            File.WriteAllText(path2, jsonString);
+            Product product2 = JsonSerializer.Deserialize<Product>(jsonString);
             Console.WriteLine();
             Console.ReadKey();
         }
