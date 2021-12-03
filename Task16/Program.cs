@@ -24,7 +24,7 @@ namespace Task16
         static void Main(string[] args)
         {
             string path = "Logs";
-            if (!Directory.Exists(path)) 
+            if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
@@ -34,33 +34,51 @@ namespace Task16
                 var newFile = File.Create(path2);
                 newFile.Close();
             }
-            Console.Write("Введите количество видов товара:   ");
-            int a = Convert.ToInt32(Console.ReadLine());
-            Product[] products = new Product[a];
-            Product product1 = new Product();
+            try
+            {
+                Console.Write("Введите количество видов товара:   ");
+                int a = Convert.ToInt32(Console.ReadLine());
 
-            for (int j = 0; j < a; j++)
-            {
-                Console.Write("\nВведите код товара:       \t ");
-                product1.CodeProduct = Convert.ToInt32(Console.ReadLine());
-                Console.Write("Введите наименование товара:\t ");
-                product1.NameProduct = Convert.ToString(Console.ReadLine());
-                Console.Write("Введите стоимость товара:\t ");
-                product1.PriceProduct = Convert.ToDouble(Console.ReadLine());
-                products[j] = product1;                               
+                Product[] products = new Product[a];
+                JsonSerializerOptions options = new JsonSerializerOptions()
+                {
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic), // на сайте microsoft.com
+                    WriteIndented = true
+                };
+                for (int i = 0; i < a; i++)
+                {
+                    products[i] = new Product();
+                    Console.Write("\nВведите код товара:       \t ");
+                    products[i].CodeProduct = Convert.ToInt32(Console.ReadLine());
+                    Console.Write("Введите наименование товара:\t ");
+                    products[i].NameProduct = Convert.ToString(Console.ReadLine());
+                    Console.Write("Введите стоимость товара:\t ");
+                    products[i].PriceProduct = Convert.ToDouble(Console.ReadLine());
+                    products[i].Print();
+                }
+                string jsonString = JsonSerializer.Serialize(products, options);
+                File.WriteAllText(path2, jsonString);
+                StreamReader sr = new StreamReader(path2, false);
+                sr.ReadToEnd();
+                sr.Close();
+                jsonString = File.ReadAllText(path2);
+                Product[] product2 = JsonSerializer.Deserialize<Product[]>(jsonString);
+                double max = product2[0].PriceProduct;
+                int maxIndex = 0;
+                for (int i = 0; i < a; i++)
+                {
+                    if (product2[i].PriceProduct > max)
+                    {
+                        max = product2[i].PriceProduct;
+                        maxIndex = i;
+                    }
+                }
+                Console.WriteLine("Самый дорогой товар: {0}, его цена составляет {1} руб.", product2[maxIndex].NameProduct, product2[maxIndex].PriceProduct);
             }
-            foreach (var p in products)
+            catch (FormatException ex)
             {
-                product1.Print();
+                Console.WriteLine("Неправильный формат ввода!", ex.Message);
             }
-            JsonSerializerOptions options = new JsonSerializerOptions()
-            {
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic), // на сайте microsoft.com
-                WriteIndented = false
-            };
-            string jsonString = JsonSerializer.Serialize(product1, options);
-            File.WriteAllText(path2, jsonString);
-            Product product2 = JsonSerializer.Deserialize<Product>(jsonString);
             Console.WriteLine();
             Console.ReadKey();
         }
@@ -85,7 +103,7 @@ namespace Task16
             Console.WriteLine(new string('=', 50));
             Console.WriteLine("Code of Product:  {0}", CodeProduct);
             Console.WriteLine("Name of Product:  {0}", NameProduct);
-            Console.WriteLine("Price of Product: {0}", PriceProduct);
+            Console.WriteLine("Price of Product: {0} rub.", PriceProduct);
             Console.WriteLine(new string('=', 50));
             Console.WriteLine();
         }
